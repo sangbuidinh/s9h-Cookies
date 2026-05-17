@@ -1,0 +1,23 @@
+# Packaged extension files
+*.crx
+*.pem
+
+# Exported cookie files / sensitive data
+cookies.txt
+*cookie*.txt
+*cookies*.txt
+*.json.backup
+
+# Logs / temp files
+*.log
+*.tmp
+temp/
+backup/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/

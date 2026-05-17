@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Công cụ Xuất / Nhập Cookie</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <h1>Công cụ Xuất / Nhập Cookie</h1>
+        <p class="warning">Cookie là dữ liệu nhạy cảm. Bất kỳ ai có file này đều có thể truy cập phiên đăng nhập của bạn. Hãy giữ file export ở nơi an toàn.</p>
+      </div>
+      <div class="tab-buttons" role="tablist" aria-label="Tab chính">
+        <button id="exportTabButton" class="tab-button active" type="button" role="tab" aria-selected="true">Xuất cookie</button>
+        <button id="importTabButton" class="tab-button" type="button" role="tab" aria-selected="false">Nhập cookie</button>
+      </div>
+    </header>
+
+    <div id="statusBar" class="status-bar" role="status">Sẵn sàng.</div>
+
+    <main>
+      <section id="exportPanel" class="panel active" role="tabpanel" aria-labelledby="exportTabButton">
+        <div class="controls-grid">
+          <label class="field">
+            <span>Nguồn cookie</span>
+            <select id="exportSource">
+              <option value="current">Tab hiện tại</option>
+              <option value="domain">Tên miền</option>
+              <option value="all">Tất cả cookie</option>
+            </select>
+          </label>
+
+          <label class="field field-wide">
+            <span>Tên miền</span>
+            <input id="exportDomain" type="text" placeholder="Nhập tên miền, ví dụ: youtube.com" disabled>
+          </label>
+
+          <label class="field">
+            <span>Định dạng</span>
+            <select id="exportFormat">
+              <option value="netscape">Netscape cookies.txt</option>
+              <option value="json">JSON</option>
+              <option value="header">Header String</option>
+            </select>
+          </label>
+
+        </div>
+
+        <details class="advanced-options">
+          <summary>Tuỳ chọn nâng cao</summary>
+          <div class="advanced-body">
+            <label class="checkbox-field">
+              <input id="includeSubdomains" type="checkbox" checked>
+              <span>Bao gồm tên miền con</span>
+            </label>
+
+            <label class="checkbox-field">
+              <input id="showExportValues" type="checkbox">
+              <span>Hiện giá trị cookie</span>
+            </label>
+          </div>
+        </details>
+
+        <div id="allCookiesWarning" class="notice hidden">Xuất toàn bộ cookie có thể chứa dữ liệu rất nhạy cảm.</div>
+        <div id="headerExportWarning" class="notice hidden">Header String không lưu thông tin domain, path, expiry, secure, HttpOnly hoặc SameSite.</div>
+
+        <div class="button-row">
+          <button id="copyExportButton" class="secondary-button" type="button">Sao chép cookie</button>
+          <button id="downloadExportButton" class="primary-button" type="button">Xuất / Tải xuống</button>
+          <span id="exportCount" class="count-label">0 cookie</span>
+        </div>
+
+        <details id="exportPreviewDetails" class="preview-details">
+          <summary>Chi tiết cookie</summary>
+          <div class="preview-wrapper">
+            <table id="exportTable">
+              <thead>
+                <tr>
+                  <th>Tên miền</th>
+                  <th>Đường dẫn</th>
+                  <th>Bảo mật</th>
+                  <th>HttpOnly</th>
+                  <th>SameSite</th>
+                  <th>Hết hạn</th>
+                  <th>Tên</th>
+                  <th>Giá trị</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </details>
+      </section>
+
+      <section id="importPanel" class="panel" role="tabpanel" aria-labelledby="importTabButton">
+        <div class="controls-grid import-grid">
+          <label class="field field-wide">
+            <span>Nhập từ file</span>
+            <input id="importFile" type="file" accept=".txt,.json,.cookies,text/plain,application/json">
+          </label>
+
+          <label class="field import-mode-field">
+            <span>Chế độ nhập</span>
+            <select id="importMode">
+              <option value="dryRun" selected>Chạy thử</option>
+              <option value="merge">Gộp cookie, ghi đè cookie trùng</option>
+              <option value="overwrite">Xóa cookie cũ của tên miền rồi nhập lại</option>
+            </select>
+          </label>
+
+          <div id="overwriteWarning" class="overwrite-warning hidden">
+            <div class="overwrite-warning-text">⚠ Chế độ này sẽ xóa cookie cũ của tên miền liên quan trước khi nhập cookie mới.</div>
+            <label class="checkbox-field overwrite-check">
+              <input id="overwriteAck" type="checkbox" disabled>
+              <span>Tôi hiểu và muốn tiếp tục.</span>
+            </label>
+          </div>
+
+        </div>
+
+        <details class="advanced-options">
+          <summary>Tuỳ chọn nâng cao</summary>
+          <div class="advanced-body">
+            <label class="field">
+              <span>Tên miền đích</span>
+              <input id="targetDomain" type="text" placeholder="Chỉ cần khi dùng Header String hoặc muốn ép cookie vào một tên miền">
+              <small class="helper-text">Nếu dán Header String, bắt buộc nhập tên miền, ví dụ: youtube.com</small>
+            </label>
+
+            <label class="checkbox-field">
+              <input id="showImportValues" type="checkbox">
+              <span>Hiện giá trị cookie</span>
+            </label>
+          </div>
+        </details>
+
+        <label class="field textarea-field">
+          <span>Dán cookie tại đây</span>
+          <textarea id="importText" spellcheck="false" placeholder="Dán cookie định dạng Netscape cookies.txt, JSON hoặc Header String tại đây"></textarea>
+        </label>
+
+        <div class="button-row">
+          <button id="importCookiesButton" class="primary-button" type="button">Nhập cookie</button>
+          <button id="clearImportButton" class="secondary-button" type="button">Xóa ô nhập</button>
+          <span id="importCount" class="count-label">0 cookie đã xử lý</span>
+        </div>
+
+        <details id="importPreviewDetails" class="preview-details">
+          <summary>Chi tiết cookie</summary>
+          <div class="preview-wrapper">
+            <table id="importTable">
+              <thead>
+                <tr>
+                  <th>Tên miền</th>
+                  <th>Đường dẫn</th>
+                  <th>Bảo mật</th>
+                  <th>HttpOnly</th>
+                  <th>SameSite</th>
+                  <th>Hết hạn</th>
+                  <th>Tên</th>
+                  <th>Giá trị</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </details>
+
+        <div id="resultSection" class="table-section result-section hidden">
+          <h2>Nhật ký kết quả</h2>
+          <div class="log-wrapper">
+            <table id="resultTable">
+              <thead>
+                <tr>
+                  <th>STT</th>
+                  <th>Tên</th>
+                  <th>Tên miền</th>
+                  <th>Trạng thái</th>
+                  <th>Lý do</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

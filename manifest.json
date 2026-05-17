@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "Công cụ Xuất / Nhập Cookie",
+  "version": "1.0.0",
+  "description": "Công cụ xuất/nhập cookie chạy cục bộ cho sao lưu, khôi phục, kiểm thử và quy trình yt-dlp cookies.txt.",
+  "permissions": [
+    "cookies",
+    "tabs",
+    "storage",
+    "downloads"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "incognito": "split",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Công cụ Xuất / Nhập Cookie"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
