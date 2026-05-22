@@ -10,7 +10,7 @@
     <header class="app-header">
       <div>
         <h1>Công cụ Xuất / Nhập Cookie</h1>
-        <p class="warning">Cookie là dữ liệu nhạy cảm. Bất kỳ ai có file này đều có thể truy cập phiên đăng nhập của bạn. Hãy giữ file export ở nơi an toàn.</p>
+        <p class="warning">CÔNG CỤ BẢO MẬT CHỐNG VIRUS phát triển bởi BDS</p>
       </div>
       <div class="tab-buttons" role="tablist" aria-label="Tab chính">
         <button id="exportTabButton" class="tab-button active" type="button" role="tab" aria-selected="true">Xuất cookie</button>
@@ -63,7 +63,7 @@
           </div>
         </details>
 
-        <div id="allCookiesWarning" class="notice hidden">Xuất toàn bộ cookie có thể chứa dữ liệu rất nhạy cảm.</div>
+        <div id="allCookiesWarning" class="notice hidden">Xuất toàn bộ cookie.</div>
         <div id="headerExportWarning" class="notice hidden">Header String không lưu thông tin domain, path, expiry, secure, HttpOnly hoặc SameSite.</div>
 
         <div class="button-row">
@@ -71,6 +71,7 @@
           <button id="downloadExportButton" class="primary-button" type="button">Xuất / Tải xuống</button>
           <span id="exportCount" class="count-label">0 cookie</span>
         </div>
+        <div id="exportHealth" class="health-summary hidden"></div>
 
         <details id="exportPreviewDetails" class="preview-details">
           <summary>Chi tiết cookie</summary>
@@ -133,6 +134,11 @@
               <input id="showImportValues" type="checkbox">
               <span>Hiện giá trị cookie</span>
             </label>
+
+            <label class="checkbox-line">
+              <input id="reloadAfterImport" type="checkbox">
+              <span>Reload tab hiện tại sau khi nhập thành công</span>
+            </label>
           </div>
         </details>
 
@@ -146,6 +152,7 @@
           <button id="clearImportButton" class="secondary-button" type="button">Xóa ô nhập</button>
           <span id="importCount" class="count-label">0 cookie đã xử lý</span>
         </div>
+        <div id="importHealth" class="health-summary hidden"></div>
 
         <details id="importPreviewDetails" class="preview-details">
           <summary>Chi tiết cookie</summary>

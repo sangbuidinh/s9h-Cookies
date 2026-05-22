@@ -1,6 +1,8 @@
 import { downloadExportText, formatCookiesForExport, loadCookiesForSource } from "./lib/cookie-export.js";
 import { importCookieRecords, parseImportText } from "./lib/cookie-import.js";
+import { reloadActiveTab } from "./lib/cookie-api.js";
 import { boolText, copyTextToClipboard, formatExpiry, maskCookieValue, setTextContent } from "./lib/utils.js";
+import { analyzeCookieHealth, formatCookieHealthSummary } from "./lib/validator.js";
 
 const state = {
   exportCookies: [],
@@ -26,6 +28,7 @@ const elements = {
   copyExportButton: document.getElementById("copyExportButton"),
   downloadExportButton: document.getElementById("downloadExportButton"),
   exportCount: document.getElementById("exportCount"),
+  exportHealth: document.getElementById("exportHealth"),
   exportPreviewDetails: document.getElementById("exportPreviewDetails"),
   exportTable: document.getElementById("exportTable"),
   importFile: document.getElementById("importFile"),
@@ -34,28 +37,17 @@ const elements = {
   overwriteWarning: document.getElementById("overwriteWarning"),
   overwriteAck: document.getElementById("overwriteAck"),
   showImportValues: document.getElementById("showImportValues"),
+  reloadAfterImport: document.getElementById("reloadAfterImport"),
   importText: document.getElementById("importText"),
   importCookiesButton: document.getElementById("importCookiesButton"),
   clearImportButton: document.getElementById("clearImportButton"),
   importCount: document.getElementById("importCount"),
+  importHealth: document.getElementById("importHealth"),
   importPreviewDetails: document.getElementById("importPreviewDetails"),
   importTable: document.getElementById("importTable"),
   resultSection: document.getElementById("resultSection"),
   resultTable: document.getElementById("resultTable")
 };
-
-function displayFormat(format) {
-  if (format === "netscape") {
-    return "Netscape";
-  }
-  if (format === "json") {
-    return "JSON";
-  }
-  if (format === "header") {
-    return "Header String";
-  }
-  return format;
-}
 
 function displayResultStatus(status) {
   if (status === "success") {
@@ -76,6 +68,41 @@ function setStatus(message, type) {
   if (type) {
     elements.statusBar.classList.add(type);
   }
+}
+
+function setHealthSummary(element, summary, level) {
+  if (!element) {
+    return;
+  }
+
+  if (!summary) {
+    element.classList.add("hidden");
+    element.textContent = "";
+    element.classList.remove("warning", "error");
+    return;
+  }
+
+  element.textContent = summary;
+  element.classList.remove("hidden", "warning", "error");
+
+  if (level === "warning") {
+    element.classList.add("warning");
+  } else if (level === "error") {
+    element.classList.add("error");
+  }
+}
+
+function healthLevel(report) {
+  if (!report) {
+    return "";
+  }
+  if (report.expired > 0) {
+    return "error";
+  }
+  if (report.nearExpiry24h > 0 || report.session > 0) {
+    return "warning";
+  }
+  return "";
 }
 
 function setBusy(isBusy) {
@@ -183,7 +210,7 @@ function renderResultTable(results) {
 }
 
 function getSelectedImportMode() {
-  return elements.importMode.value || "dryRun";
+  return elements.importMode && elements.importMode.value || "dryRun";
 }
 
 function updateImportModeControls() {
@@ -228,6 +255,8 @@ async function refreshExportCookies() {
   const result = await loadCookiesForSource(source, elements.exportDomain.value, includeRelated);
   state.exportCookies = result.cookies;
   updateExportText();
+  const report = analyzeCookieHealth(state.exportCookies);
+  setHealthSummary(elements.exportHealth, formatCookieHealthSummary(report), healthLevel(report));
   renderCookieTable(elements.exportTable, state.exportCookies, elements.showExportValues.checked, TABLE_NOWRAP);
   elements.exportCount.textContent = state.exportCookies.length + " cookie đã xử lý";
   if (!state.exportCookies.length) {
@@ -252,8 +281,8 @@ async function copyExport() {
 async function downloadExport() {
   setBusy(true);
   try {
-    await refreshExportCookies();
-    await downloadExportText(state.exportText, elements.exportFormat.value);
+    const result = await refreshExportCookies();
+    await downloadExportText(state.exportText, elements.exportFormat.value, result);
     setStatus("Đã xuất " + state.exportCookies.length + " cookie và bắt đầu tải xuống.", "success");
   } catch (error) {
     setStatus(error.message || "Không tải xuống được.", "error");
@@ -298,6 +327,12 @@ function recordsToParseLogs(records) {
   });
 }
 
+function recordsToHealthCookies(records) {
+  return (records || []).map(function (record) {
+    return record.cookie || record.raw;
+  }).filter(Boolean);
+}
+
 function parseImportData() {
   try {
     const parsed = parseImportText(elements.importText.value, "auto", elements.targetDomain.value);
@@ -305,11 +340,14 @@ function parseImportData() {
     const validCookies = recordsToCookies(state.importRecords);
     renderCookieTable(elements.importTable, validCookies, elements.showImportValues.checked, TABLE_NOWRAP);
     renderResultTable(recordsToParseLogs(state.importRecords));
+    const report = analyzeCookieHealth(recordsToHealthCookies(state.importRecords));
+    setHealthSummary(elements.importHealth, formatCookieHealthSummary(report), healthLevel(report));
     elements.importCount.textContent = validCookies.length + " cookie hợp lệ / " + state.importRecords.length + " cookie đã xử lý";
     return parsed;
   } catch (error) {
     state.importRecords = [];
     renderCookieTable(elements.importTable, [], false, TABLE_NOWRAP);
+    setHealthSummary(elements.importHealth, "", "");
     renderResultTable([{
       index: "-",
       name: "",
@@ -339,7 +377,7 @@ async function importCookies() {
     renderResultTable(results);
     const validCount = recordsToCookies(state.importRecords).length;
     const successCount = results.filter(function (result) {
-      return result.status === "success";
+      return result.status === "success" && result.name !== "(overwrite)";
     }).length;
     const failedCount = results.filter(function (result) {
       return result.status === "failed";
@@ -348,8 +386,18 @@ async function importCookies() {
       return result.status === "skipped";
     }).length;
     elements.importCount.textContent = validCount + " cookie hợp lệ / " + state.importRecords.length + " cookie đã xử lý";
+    let reloadStatus = "";
+    if (mode !== "dryRun" && successCount > 0 && elements.reloadAfterImport && elements.reloadAfterImport.checked) {
+      try {
+        const reloaded = await reloadActiveTab();
+        reloadStatus = reloaded ? " Đã reload tab hiện tại." : " Không reload được tab hiện tại.";
+      } catch {
+        reloadStatus = " Không reload được tab hiện tại.";
+      }
+    }
+
     const statusType = failedCount ? "error" : "success";
-    setStatus("Nhật ký nhập: " + successCount + " thành công, " + skippedCount + " bỏ qua, " + failedCount + " lỗi.", statusType);
+    setStatus("Nhật ký nhập: " + successCount + " thành công, " + skippedCount + " bỏ qua, " + failedCount + " lỗi." + reloadStatus, statusType);
   } catch (error) {
     setStatus(error.message || "Nhập cookie thất bại.", "error");
   } finally {
@@ -363,9 +411,13 @@ function clearImport() {
   elements.targetDomain.value = "";
   elements.importMode.value = "dryRun";
   elements.overwriteAck.checked = false;
+  if (elements.reloadAfterImport) {
+    elements.reloadAfterImport.checked = false;
+  }
   updateImportModeControls();
   state.importRecords = [];
   renderCookieTable(elements.importTable, [], false, TABLE_NOWRAP);
+  setHealthSummary(elements.importHealth, "", "");
   renderResultTable([]);
   setResultSectionVisible(false);
   elements.importCount.textContent = "0 cookie đã xử lý";
@@ -384,6 +436,7 @@ addListener(elements.exportSource, "change", function () {
   state.exportCookies = [];
   state.exportText = "";
   elements.exportCount.textContent = "0 cookie";
+  setHealthSummary(elements.exportHealth, "", "");
   renderCookieTable(elements.exportTable, [], false, TABLE_NOWRAP);
   updateExportControls();
 });

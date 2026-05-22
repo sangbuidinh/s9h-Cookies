@@ -9,7 +9,7 @@
   --accent-dark: #1742a0;
   --danger: #b42318;
   --success: #087443;
-  --warn: #9a6590;
+  --warn: #9a6700;
 }
 
 * {
@@ -26,12 +26,12 @@ body {
 }
 
 html {
-  width: 590px;
-  min-width: 590px;
+  width: 760px;
+  min-width: 760px;
 }
 
 body {
-  width: 590px;
+  width: 760px;
   min-height: 420px;
   max-height: 720px;
   overflow-x: hidden;
@@ -179,7 +179,8 @@ main {
 }
 
 .field span,
-.checkbox-field span {
+.checkbox-field span,
+.checkbox-line span {
   color: var(--muted);
 }
 
@@ -208,7 +209,8 @@ textarea {
   margin-top: 10px;
 }
 
-.checkbox-field {
+.checkbox-field,
+.checkbox-line {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -322,6 +324,29 @@ textarea {
   color: var(--muted);
 }
 
+.health-summary {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #f8fafc;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.health-summary.warning {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.health-summary.error {
+  border-color: #ef4444;
+  background: #fef2f2;
+  color: #991b1b;
+}
+
 .preview-wrapper,
 .log-wrapper {
   max-width: 100%;
@@ -362,7 +387,7 @@ th {
   z-index: 1;
   background: #f0f3f7;
   color: #313842;
-  font-weight: 590;
+  font-weight: 700;
 }
 
 tr:last-child td {
@@ -390,15 +415,15 @@ tr:last-child td {
 
 .status-success {
   color: var(--success);
-  font-weight: 590;
+  font-weight: 700;
 }
 
 .status-failed {
   color: var(--danger);
-  font-weight: 590;
+  font-weight: 700;
 }
 
 .status-skipped {
   color: var(--warn);
-  font-weight: 590;
+  font-weight: 700;
 }
