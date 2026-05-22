@@ -179,7 +179,8 @@ main {
 }
 
 .field span,
-.checkbox-field span {
+.checkbox-field span,
+.checkbox-line span {
   color: var(--muted);
 }
 
@@ -208,7 +209,8 @@ textarea {
   margin-top: 10px;
 }
 
-.checkbox-field {
+.checkbox-field,
+.checkbox-line {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -289,6 +291,29 @@ textarea {
 
 .hidden {
   display: none;
+}
+
+.health-summary {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #f8fafc;
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.health-summary.warning {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  color: #92400e;
+}
+
+.health-summary.error {
+  border-color: #ef4444;
+  background: #fef2f2;
+  color: #991b1b;
 }
 
 .preview-details {

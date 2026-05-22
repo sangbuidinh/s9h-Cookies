@@ -71,6 +71,7 @@
           <button id="downloadExportButton" class="primary-button" type="button">Xuất / Tải xuống</button>
           <span id="exportCount" class="count-label">0 cookie</span>
         </div>
+        <div id="exportHealth" class="health-summary hidden"></div>
 
         <details id="exportPreviewDetails" class="preview-details">
           <summary>Chi tiết cookie</summary>
@@ -133,6 +134,11 @@
               <input id="showImportValues" type="checkbox">
               <span>Hiện giá trị cookie</span>
             </label>
+
+            <label class="checkbox-line">
+              <input id="reloadAfterImport" type="checkbox">
+              <span>Reload tab hiện tại sau khi nhập thành công</span>
+            </label>
           </div>
         </details>
 
@@ -146,6 +152,7 @@
           <button id="clearImportButton" class="secondary-button" type="button">Xóa ô nhập</button>
           <span id="importCount" class="count-label">0 cookie đã xử lý</span>
         </div>
+        <div id="importHealth" class="health-summary hidden"></div>
 
         <details id="importPreviewDetails" class="preview-details">
           <summary>Chi tiết cookie</summary>
